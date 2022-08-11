@@ -1,0 +1,279 @@
+package com.qalain.ui.suite.engine;
+
+import com.qalain.ui.config.EngineConfig;
+import com.qalain.ui.constant.SuiteConstant;
+import com.qalain.ui.core.AutoTestProcessor;
+import com.qalain.ui.core.engine.EngineDriver;
+import com.qalain.ui.core.engine.EngineProperties;
+import com.qalain.ui.core.entity.ui.Text;
+import com.qalain.ui.core.page.Page;
+import com.qalain.ui.core.strategy.ElementFindStrategy;
+import com.qalain.ui.core.strategy.FindStrategyContext;
+import com.qalain.ui.generator.CodeGenerator;
+import com.qalain.ui.suite.action.ICustomAction;
+import com.qalain.ui.suite.adapter.ElementAdapter;
+import com.qalain.ui.suite.entity.*;
+import com.qalain.ui.suite.invoker.JsInvoker;
+import com.qalain.ui.suite.parser.AutoTestSuiteParser;
+import com.qalain.ui.util.*;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.beans.factory.annotation.Value;
+import org.testng.*;
+import org.testng.annotations.*;
+import org.testng.internal.TestResult;
+
+import javax.annotation.Resource;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
+/**
+ * @author lain
+ * @Description
+ * @create 2022-01-24
+ */
+@Slf4j
+public class AutoTestEngine implements ITest {
+
+    public static final String AUTO_TEST_FLOW_DATA = "AUTO_TEST_FLOW_DATA";
+
+    private AutoTestSuiteParser autoTestSuiteParser = AutoTestSuiteParser.getInstance();
+    private AutoTestProcessor autoTestProcessor = AutoTestProcessor.getInstance();
+
+    private List<AutoTestData> autoTestDataList;
+
+    private EngineDriver engine;
+
+    private ElementFindStrategy<WebElement> elementFindStrategy;
+
+    private ThreadLocal<String> testName = new ThreadLocal<>();
+
+    private static ThreadLocal<String> authorName = new ThreadLocal<>();
+
+    @BeforeClass
+    public void init() {
+        //设置是否并发执行
+        boolean isParallel = ReadPropertiesUtil.getBooleanProp("engine", "test.data.parallel");
+        int threadPoolSize = Integer.parseInt(ReadPropertiesUtil.getProp("engine", "test.case.run.thread.pool.size"));
+        setParallel(isParallel, threadPoolSize);
+
+        //初始化自动化UI测试流程数据
+        String testSuitePath = EngineProperties.get(EngineConfig.TEST_SUITE_PATH);
+        autoTestDataList = autoTestSuiteParser.init(testSuitePath);
+        //生成 page 类
+        String testPagePath = EngineProperties.get(EngineConfig.TEST_PAGE_PATH);
+        for (String s : testPagePath.split(",")) {
+            CodeGenerator.generate(s, "src/main/java");
+        }
+
+        //获取Engine对象
+        engine = autoTestSuiteParser.getEngine();
+        //获取元素查找策略
+        FindStrategyContext findStrategyContext = autoTestSuiteParser.getApplicationContext().getBean(FindStrategyContext.class);
+        elementFindStrategy = findStrategyContext.getStrategy(WebElement.class);
+    }
+
+    @DataProvider(name = AUTO_TEST_FLOW_DATA)
+    public Iterator<Object[]> prepareTestData() {
+        List<Object[]> dataProvider = new ArrayList<>();
+        for (AutoTestData autoTestData : autoTestDataList) {
+            for (SuiteFlow suiteFlow : autoTestData.getSuiteFlows()) {
+                dataProvider.add(new Object[]{
+                        new SuiteTestFlowData(autoTestData.getSuiteDriver(), autoTestData.getElementInfoList(), suiteFlow)
+                });
+            }
+        }
+        return dataProvider.iterator();
+    }
+
+    @BeforeMethod(alwaysRun = true)
+    public void BeforeMethod(Method method, Object[] testData){
+
+        if (testData[0] instanceof SuiteTestFlowData) {
+            SuiteTestFlowData suiteTestFlowData = (SuiteTestFlowData) testData[0];
+            testName.set(method.getName() + "_" + suiteTestFlowData.getSuiteFlow().getName());
+            authorName.set(suiteTestFlowData.getSuiteFlow().getAuthor());
+        } else {
+            testName.set(method.getName());
+        }
+        log.info("before:{}",method.getName());
+    }
+
+    @Test(dataProvider = AUTO_TEST_FLOW_DATA)
+    public void execute(SuiteTestFlowData suiteTestFlowData, ITestContext context) throws InterruptedException {
+        log.info("testName:{}", testName.get());
+        LogUtil.info("测试用例：{}【{}】", suiteTestFlowData.getSuiteFlow().getName(), suiteTestFlowData.getSuiteFlow().getDesc());
+        //如果engine的webDriver为空，则说明当前未打开浏览器窗口，此时则初始化浏览器窗口
+        if (engine.getThreadLocalDriver() == null) {
+            engine.setDriverInfo(suiteTestFlowData.getSuiteDriver());
+            engine.init();
+        }
+
+        //设置作者到 context 中
+        context.setAttribute("author", authorName.get());
+
+        List<FlowStep> flowStepList = suiteTestFlowData.getSuiteFlow().getFlowStepList();
+        for (FlowStep flowStep : flowStepList) {
+            ThreadUtil.sleep(suiteTestFlowData.getSuiteDriver().getActionBeforeWaitTime());
+            doFlowStep(flowStep, suiteTestFlowData.getSuiteElementMap());
+            ThreadUtil.sleep(suiteTestFlowData.getSuiteDriver().getActionAfterWaitTime());
+        }
+    }
+
+    private void doFlowStep(FlowStep flowStep, Map<String, SuiteElement> elementMap) {
+        WebElement webElement = null;
+        WebDriver webDriver = engine.getThreadLocalDriver();
+        WebDriverWait webDriverWait = new WebDriverWait(webDriver, flowStep.getWaitTime());
+        switch (flowStep.getAction()) {
+            case SuiteConstant.Action.OPEN_PAGE:
+                engine.open(flowStep.getUrl());
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.CLICK:
+                webElement = elementFindStrategy.find(ElementAdapter.getBaseElement(elementMap.get(flowStep.getRefId())));
+                Actions clickAction = new Actions(webDriver);
+                clickAction.moveToElement(webElement);
+                clickAction.click(webElement).build().perform();
+                //webDriverWait.until(ExpectedConditions.elementToBeClickable(webElement)).click();
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.HOVER:
+                webElement = elementFindStrategy.find(ElementAdapter.getBaseElement(elementMap.get(flowStep.getRefId())));
+                Actions actions = new Actions(webDriver);
+                actions.moveToElement(webElement).perform();
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.FILL_VALUE:
+                webElement = elementFindStrategy.find(ElementAdapter.getBaseElement(elementMap.get(flowStep.getRefId())));
+                if (!StringUtils.isBlank(webElement.getText())) {
+                    webElement.clear();
+                }
+                webElement.sendKeys(StringUtils.defaultIfEmpty(flowStep.getValue(), StringUtils.EMPTY));
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.COMPARE_VALUE:
+                webElement = elementFindStrategy.find(ElementAdapter.getBaseElement(elementMap.get(flowStep.getRefId())));
+                String value = webElement.getAttribute("value");
+                log.info("元素定位：{}，元素内容：{}", elementMap.get(flowStep.getRefId()), value);
+                Assert.assertEquals(value, flowStep.getExpectValue());
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.KEY_BOARD_ENTER:
+                new Actions(webDriver).sendKeys(Keys.ENTER).build().perform();
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.SWITCH_WINDOW:
+                WindowHandleUtil.switchWindow(webDriver);
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.CLOSE_CURRENT_WINDOW:
+                webDriver.close();
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.CLOSE_DRIVER:
+                engine.getThreadLocalDriver().quit();
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.JS_INVOKER:
+                JsInvoker.execute(webDriver, flowStep.getInvokerContent());
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.CUSTOM:
+                Map<String, ICustomAction> customActionMap = autoTestSuiteParser.getApplicationContext().getBeansOfType(ICustomAction.class);
+                ICustomAction customAction = customActionMap.get(flowStep.getCustomFunction());
+                if (customAction == null) {
+                    log.warn("未发现名为【{}】的 customFunction", flowStep.getCustomFunction());
+                    break;
+                }
+                customAction.execute(engine);
+                ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case SuiteConstant.Action.SWITCH_IFRAME:
+                webElement = elementFindStrategy.find(ElementAdapter.getBaseElement(elementMap.get(flowStep.getRefId())));
+                webDriverWait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(webElement));
+                break;
+            case SuiteConstant.Action.REFRESH:
+                webDriver.navigate().refresh();
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    @Override
+    public String getTestName() {
+        return testName.get();
+    }
+
+    public static String getAuthorName() {
+        return authorName.get();
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void setResultTestName(ITestResult result) {
+        try {
+            Field resultMethod = TestResult.class.getDeclaredField("m_method");
+            resultMethod.setAccessible(true);
+            resultMethod.set(result, result.getMethod().clone());
+            Field methodName = org.testng.internal.BaseTestMethod.class.getDeclaredField("m_methodName");
+            methodName.setAccessible(true);
+            methodName.set(result.getMethod(), testName.get());
+            System.out.println("after: " + testName.get());
+            boolean isParallel = ReadPropertiesUtil.getBooleanProp("engine", "test.data.parallel");
+            int threadPoolSize = Integer.parseInt(ReadPropertiesUtil.getProp("engine", "test.case.run.thread.pool.size"));
+            if (engine.getDriverInfo().getRemoteAddress() != null & isParallel & threadPoolSize > 0) {
+                ((RemoteWebDriver)engine.getThreadLocalDriver()).quit();
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage(),e);
+            Reporter.log("Exception : " + e.getMessage());
+        }
+    }
+
+    @AfterClass
+    void terminate () {
+        engine.getWebdriverThreadLocal().remove();
+    }
+
+    private void setParallel(boolean isParallel, int threadPoolSize) {
+        Class<AutoTestEngine> engineClass = AutoTestEngine.class;
+        try {
+            Method testData = engineClass.getDeclaredMethod("prepareTestData");
+            DataProvider dataProvider = testData.getAnnotation(DataProvider.class);
+            InvocationHandler dataHandler = Proxy.getInvocationHandler(dataProvider);
+            Field dataHandlerFields = dataHandler.getClass().getDeclaredField("memberValues");
+            dataHandlerFields.setAccessible(true);
+            Map members = (Map)dataHandlerFields.get(dataHandler);
+            members.put("parallel", isParallel);
+
+            Method execute = engineClass.getDeclaredMethod("execute", SuiteTestFlowData.class, ITestContext.class);
+            Test testAnnotation = execute.getAnnotation(Test.class);
+            InvocationHandler invocationHandler = Proxy.getInvocationHandler(testAnnotation);
+            Field declaredField = invocationHandler.getClass().getDeclaredField("memberValues");
+            declaredField.setAccessible(true);
+            Map memberValues = (Map)declaredField.get(invocationHandler);
+            memberValues.put("threadPoolSize", threadPoolSize);
+        } catch (NoSuchMethodException | NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+}

@@ -1,0 +1,15 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="UI自动化测试" verbose="10">
+    <listeners>
+        <listener class-name="com.qalain.ui.report.ExtentTestNGIReporterListener"/>
+        <listener class-name="com.qalain.ui.aop.TestScreenshotListener"/>
+    </listeners>
+
+    <test name="UI自动化测试流程" preserve-order="true">
+        <classes>
+            <class name="com.qalain.ui.suite.engine.AutoTestEngine" />
+        </classes>
+    </test>
+</suite>
+

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<autoTestUi xmlns="http://www.lain.cn/config">
+    <engine browser="chrome" maximize="true" timeout="10000"/>
+    <pages pagePackage="com.qalain.ui.page">
+        <page pageClass="BaiduPage" url="http://www.baidu.com" comment="百度首页">
+            <field name="wordInput" byId="kw" type="text" value="selenium" comment="输入内容"/>
+            <field name="searchBtn" byId="su" type="button" comment="点击搜索"/>
+        </page>
+        <page pageClass="BaiduPage2" url="http://www.baidu.com" comment="百度首页">
+            <field name="wordInput" byId="kw" type="text" value="selenium" comment="输入内容"/>
+            <field name="searchBtn" byId="su" type="button" comment="点击搜索"/>
+        </page>
+        <page pageClass="BaiduPage3" url="http://www.baidu.com" comment="百度首页">
+            <field name="wordInput" byId="kw" type="text" value="selenium" comment="输入内容"/>
+            <field name="searchBtn" byId="su" type="button" comment="点击搜索"/>
+            <field name="searchName" byId="su" type="button" comment="点击搜索"/>
+        </page>
+    </pages>
+</autoTestUi>

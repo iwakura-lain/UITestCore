@@ -1,0 +1,199 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://www.lain.cn/config"
+           targetNamespace="http://www.lain.cn/config"
+           xmlns="http://www.lain.cn/config"
+           elementFormDefault="qualified">
+    <xs:element name="autoTestUi" type="tns:autoTestUiType">
+        <xs:annotation>
+            <xs:documentation><![CDATA[配置根路径]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+
+    <xs:complexType name="autoTestUiType">
+        <xs:sequence>
+            <xs:element name="engine" type="tns:engineType">
+                <xs:annotation>
+                    <xs:documentation><![CDATA[浏览器引擎配置]]></xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="pages" type="tns:pagesType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation><![CDATA[页面列表配置]]></xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="includePage" type="tns:includePageType" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation><![CDATA[包含的页面xml路径配置]]></xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="engineType">
+        <xs:attribute name="browser" type="tns:browserType" use="required">
+            <xs:annotation>
+                <xs:documentation><![CDATA[浏览器类型配置，默认值为chrome，必填。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="remoteAddress" type="xs:anyURI">
+            <xs:annotation>
+                <xs:documentation><![CDATA[远程服务模式，例如http://192.168.1.2:4444/wd/hub。可选，不填即为本地模式]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="timeout" type="xs:positiveInteger">
+            <xs:annotation>
+                <xs:documentation><![CDATA[显示地设置元素查找超时事件，单位为毫秒，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="maximize" type="xs:boolean">
+            <xs:annotation>
+                <xs:documentation><![CDATA[浏览器窗口最大化，填写true的话浏览器启动后窗口会最大化，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="width" type="xs:positiveInteger">
+            <xs:annotation>
+                <xs:documentation><![CDATA[浏览器宽度，须为正整数，单位像素，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="height" type="xs:positiveInteger">
+            <xs:annotation>
+                <xs:documentation><![CDATA[浏览器高度，须为正整数，单位像素，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="pagesType">
+        <xs:sequence>
+            <xs:element name="page" type="tns:pageType">
+                <xs:annotation>
+                    <xs:documentation><![CDATA[页面列表配置]]></xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="pagePackage" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    <![CDATA[Page类所在的包路径]]>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="pageType" mixed="true">
+        <xs:sequence>
+            <xs:element name="field" type="tns:pageFieldType" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation><![CDATA[当前Page配置所对应的属性，必填。]]></xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="pageClass" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation><![CDATA[Page所对应的class名称，必填。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="url" type="xs:anyURI">
+            <xs:annotation>
+                <xs:documentation><![CDATA[Page所对应的url地址，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="comment" type="xs:string" default="">
+            <xs:annotation>
+                <xs:documentation><![CDATA[Page的注释，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="pageFieldType">
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation><![CDATA[field所对应的名称，必填。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="type" type="tns:fieldTypeEnum" use="required">
+            <xs:annotation>
+                <xs:documentation><![CDATA[field所对应的类型，必填。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="comment" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation><![CDATA[field描述，必填。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="value" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[field填充的数据值，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attributeGroup ref="tns:pageFieldLocatorGroup">
+            <xs:annotation>
+                <xs:documentation><![CDATA[元素定位方式]]></xs:documentation>
+            </xs:annotation>
+        </xs:attributeGroup>
+    </xs:complexType>
+
+    <xs:attributeGroup name="pageFieldLocatorGroup">
+        <xs:attribute name="byId" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据元素的ID定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="byCss" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据元素的css样式（class值）定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="byName" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据元素的名称定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="byXpath" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据元素的xpath定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="byLinkText" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据a标签的文本定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="byPartialLinkText" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据a标签的部分文本定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="waitTime" type="xs:positiveInteger">
+            <xs:annotation>
+                <xs:documentation><![CDATA[元素操作后的等待时间，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+
+    <xs:complexType name="includePageType">
+        <xs:attribute name="pageConfig" type="xs:string" default="chrome">
+            <xs:annotation>
+                <xs:documentation><![CDATA[page的xml路径（位于resources下的相对路径）]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:simpleType name="fieldTypeEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="text"/>
+            <xs:enumeration value="button"/>
+            <xs:enumeration value="select"/>
+            <xs:enumeration value="checkbox"/>
+            <xs:enumeration value="table"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="browserType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="chrome"/>
+            <xs:enumeration value="firefox"/>
+            <xs:enumeration value="ie"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>
