@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://www.lain.cn/element"
+           targetNamespace="http://www.lain.cn/element"
+           xmlns="http://www.lain.cn/suite/config"
+           elementFormDefault="qualified">
+    <xs:include schemaLocation="qa.ui.element.xsd"/>
+    <xs:element name="autoTestElement" type="tns:autoTestElement">
+        <xs:annotation>
+            <xs:documentation><![CDATA[页面元素]]></xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:complexType name="autoTestElement">
+        <xs:sequence>
+            <xs:element name="uiElements" type="tns:uiElementsType" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation><![CDATA[Ui元素定义]]></xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="uiElementsType">
+        <xs:sequence>
+            <xs:element name="uiElement" type="tns:uiElementType" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation><![CDATA[Ui元素定义信息]]></xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="ref" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[引用元素]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="uiElementType">
+        <xs:attribute name="id" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation><![CDATA[元素唯一Id标识]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="type" type="tns:fieldTypeEnum" use="required">
+            <xs:annotation>
+                <xs:documentation><![CDATA[元素对应的类型，必填。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="comment" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation><![CDATA[元素描述，必填。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attributeGroup ref="tns:pageFieldLocatorGroup">
+            <xs:annotation>
+                <xs:documentation><![CDATA[元素定位方式]]></xs:documentation>
+            </xs:annotation>
+        </xs:attributeGroup>
+    </xs:complexType>
+
+    <xs:simpleType name="fieldTypeEnum">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="text"/>
+            <xs:enumeration value="button"/>
+            <xs:enumeration value="select"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:attributeGroup name="pageFieldLocatorGroup">
+        <xs:attribute name="byId" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据元素的ID定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="byCss" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据元素的css样式（class值）定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="byName" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据元素的名称定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="byXpath" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据元素的xpath定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="byLinkText" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据a标签的文本定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="byPartialLinkText" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[根据a标签的部分文本定位，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="waitTime" type="xs:positiveInteger">
+            <xs:annotation>
+                <xs:documentation><![CDATA[元素操作后的等待时间，可选。]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:attributeGroup>
+
+</xs:schema>

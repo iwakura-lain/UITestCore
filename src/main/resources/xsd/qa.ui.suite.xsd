@@ -4,6 +4,7 @@
            targetNamespace="http://www.lain.cn/suite/config"
            xmlns="http://www.lain.cn/suite/config"
            elementFormDefault="qualified">
+    <xs:include schemaLocation="qa.ui.suite.xsd"/>
     <xs:element name="autoTestUiSuite" type="tns:autoTestUiSuiteType">
         <xs:annotation>
             <xs:documentation><![CDATA[UI自动化流程配置根路径]]></xs:documentation>
@@ -31,11 +32,11 @@
 
     <xs:complexType name="uiFlowsType">
         <xs:sequence>
-<!--            <xs:element name="suiteName" type="xs:string">-->
-<!--                <xs:annotation>-->
-<!--                    <xs:documentation><![CDATA[suite名称]]></xs:documentation>-->
-<!--                </xs:annotation>-->
-<!--            </xs:element>-->
+            <!--            <xs:element name="suiteName" type="xs:string">-->
+            <!--                <xs:annotation>-->
+            <!--                    <xs:documentation><![CDATA[suite名称]]></xs:documentation>-->
+            <!--                </xs:annotation>-->
+            <!--            </xs:element>-->
             <xs:element name="uiFlow" type="tns:uiFlowType" maxOccurs="unbounded">
                 <xs:annotation>
                     <xs:documentation><![CDATA[ui自动化流程定义]]></xs:documentation>
@@ -148,6 +149,11 @@
                 </xs:annotation>
             </xs:element>
         </xs:sequence>
+        <xs:attribute name="ref" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[引用元素]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
 
     <xs:complexType name="uiElementType">

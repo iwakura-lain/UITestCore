@@ -6,6 +6,7 @@ import com.qalain.ui.core.engine.EngineDriver;
 import com.qalain.ui.core.engine.EngineProperties;
 import com.qalain.ui.core.hook.ShutdownHook;
 import com.qalain.ui.suite.entity.*;
+import com.qalain.ui.util.ReadPropertiesUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +40,9 @@ public class AutoTestSuiteParser {
      */
     @Getter
     private EngineDriver engine;
+
+
+    private static final String ELEMENT_FILE_PATH = "element/";
 
     private AutoTestSuiteParser() {
         String customScanPackage = EngineProperties.get(EngineConfig.COMPONENT_SCAN_PACKAGE);
@@ -140,8 +144,14 @@ public class AutoTestSuiteParser {
         if (uiElements == null) {
             return Collections.emptyList();
         }
+
         List<SuiteElement> suiteElementList = new ArrayList<>();
         List<Element> uiElementList = uiElements.elements("uiElement");
+
+        // 如果引用了外部元素文件
+        if (StringUtils.isNotBlank(uiElements.attributeValue("ref"))) {
+            uiElementList = getElements4XML(uiElements.attributeValue("ref"));
+        }
         for (Element uiElement : uiElementList) {
             SuiteElement suiteElement = new SuiteElement();
             suiteElement.setRefId(uiElement.attributeValue("id"));
@@ -231,5 +241,20 @@ public class AutoTestSuiteParser {
 
     public static AutoTestSuiteParser getInstance() {
         return new AutoTestSuiteParser();
+    }
+
+    private List<Element> getElements4XML(String fileName) {
+        ClassLoader classLoader = this.getClass().getClassLoader();
+        Document document = null;
+        try (InputStream inputStream = classLoader.getResourceAsStream(ELEMENT_FILE_PATH + fileName)) {
+            document = new SAXReader().read(inputStream);
+        } catch (IOException | DocumentException e) {
+            log.error("解析页面元素文件【{}】错误", fileName, e);
+        }
+
+        Element rootElement = document.getRootElement();
+        Element uiElements = rootElement.element("uiElements");
+        List<Element> uiElementList = uiElements.elements("uiElement");
+        return uiElementList;
     }
 }

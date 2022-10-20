@@ -1,0 +1,6 @@
+<autoTestElement xmlns="http://www.lain.cn/element">
+    <uiElements>
+        <uiElement id="baidu_search_text" type="text" comment="百度搜索框" byId="kw"/>
+        <uiElement id="baidu_search_btn" type="button" comment="百度搜索按钮" byId="su"/>
+    </uiElements>
+</autoTestElement>
