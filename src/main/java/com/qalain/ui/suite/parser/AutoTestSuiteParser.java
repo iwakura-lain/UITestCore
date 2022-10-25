@@ -5,6 +5,7 @@ import com.qalain.ui.constant.AutoTestConstant;
 import com.qalain.ui.core.engine.EngineDriver;
 import com.qalain.ui.core.engine.EngineProperties;
 import com.qalain.ui.core.hook.ShutdownHook;
+import com.qalain.ui.suite.engine.AutoTestEngine;
 import com.qalain.ui.suite.entity.*;
 import com.qalain.ui.util.ReadPropertiesUtil;
 import lombok.Getter;
@@ -57,13 +58,30 @@ public class AutoTestSuiteParser {
         Runtime.getRuntime().addShutdownHook(new ShutdownHook(engine));
     }
 
-    public List<AutoTestData> init(String testSuitePaths) {
+    public List<AutoTestData> initWithAll(String[] testSuitePaths, String suitFilePath) {
+        if (testSuitePaths == null) {
+            log.warn("自动化测试流程文件路径为空，无法解析");
+            return Collections.emptyList();
+        }
+        List<AutoTestData> autoTestDataList = new ArrayList<>();
+        for (String testSuitePath : testSuitePaths) {
+            AutoTestData autoTestData = loadAutoTestData(suitFilePath + testSuitePath);
+            if (autoTestData == null) {
+                log.warn("自动化测试流程文件【{}】解析数据为空", testSuitePath);
+                continue;
+            }
+            autoTestDataList.add(autoTestData);
+        }
+        return autoTestDataList;
+    }
+
+    public List<AutoTestData> initWithPart(String testSuitePaths) {
         if (StringUtils.isBlank(testSuitePaths)) {
             log.warn("自动化测试流程文件路径为空，无法解析");
             return Collections.emptyList();
         }
         List<AutoTestData> autoTestDataList = new ArrayList<>();
-        String[] testSuitePathList = StringUtils.split(testSuitePaths, ",");
+        String[] testSuitePathList = testSuitePaths.split(",");
         for (String testSuitePath : testSuitePathList) {
             AutoTestData autoTestData = loadAutoTestData(testSuitePath);
             if (autoTestData == null) {
@@ -150,7 +168,7 @@ public class AutoTestSuiteParser {
 
         // 如果引用了外部元素文件
         if (StringUtils.isNotBlank(uiElements.attributeValue("ref"))) {
-            uiElementList = getElements4XML(uiElements.attributeValue("ref"));
+            uiElementList = parseXML2Elements(uiElements.attributeValue("ref"));
         }
         for (Element uiElement : uiElementList) {
             SuiteElement suiteElement = new SuiteElement();
@@ -243,7 +261,7 @@ public class AutoTestSuiteParser {
         return new AutoTestSuiteParser();
     }
 
-    private List<Element> getElements4XML(String fileName) {
+    private List<Element> parseXML2Elements(String fileName) {
         ClassLoader classLoader = this.getClass().getClassLoader();
         Document document = null;
         try (InputStream inputStream = classLoader.getResourceAsStream(ELEMENT_FILE_PATH + fileName)) {

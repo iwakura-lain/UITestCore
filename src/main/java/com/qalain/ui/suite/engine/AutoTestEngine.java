@@ -35,6 +35,7 @@ import org.testng.annotations.*;
 import org.testng.internal.TestResult;
 
 import javax.annotation.Resource;
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -75,7 +76,28 @@ public class AutoTestEngine implements ITest {
 
         //初始化自动化UI测试流程数据
         String testSuitePath = EngineProperties.get(EngineConfig.TEST_SUITE_PATH);
-        autoTestDataList = autoTestSuiteParser.init(testSuitePath);
+        //getAllFileNameByBFS(testSuitePath);
+        //如果指定了测试文件，则按照指定测试文件来执行
+        if (testSuitePath.contains("xml")) {
+            autoTestDataList = autoTestSuiteParser.initWithPart(testSuitePath);
+        } else {
+            // bfs 获取文件夹下所有文件
+            // 如果有子文件夹
+            if (testSuitePath.split(",").length > 1) {
+                String[] filePaths = testSuitePath.split(",");
+                StringBuffer allXMLFilePath = new StringBuffer();
+                for (String filePath : filePaths) {
+                    String suiteFilePath = AutoTestEngine.class.getClassLoader().getResource(filePath).getPath();
+                    allXMLFilePath.append(getAllFileNameByBFS(filePath + "/")).append(",");
+                }
+                autoTestDataList = autoTestSuiteParser.initWithPart(allXMLFilePath.deleteCharAt(allXMLFilePath.length()-1).toString());
+            } else {
+                // String suiteFilePath = AutoTestEngine.class.getClassLoader().getResource(testSuitePath).getPath();
+                String allFileNameByBFS = getAllFileNameByBFS(testSuitePath);
+                autoTestDataList = autoTestSuiteParser.initWithPart(allFileNameByBFS);
+            }
+        }
+
         //生成 page 类
         String testPagePath = EngineProperties.get(EngineConfig.TEST_PAGE_PATH);
         for (String s : testPagePath.split(",")) {
@@ -275,5 +297,32 @@ public class AutoTestEngine implements ITest {
         }
     }
 
+    private String getAllFileNameByBFS(String fileRootPath) {
+        if (StringUtils.isBlank(fileRootPath)) {
+            return "";
+        }
+        Queue<String> filePathList = new LinkedList<>();
+        StringBuffer xmlFileNames = new StringBuffer();
+        filePathList.add(fileRootPath);
 
+        while(!filePathList.isEmpty()) {
+            int size = filePathList.size();
+            while (size > 0) {
+                String filePath = filePathList.poll();
+                String suiteFilePath = AutoTestEngine.class.getClassLoader().getResource(filePath).getPath();
+                String[] childFile = new File(suiteFilePath).list();
+                for (String childFileName : childFile) {
+                    String fileOrDir = AutoTestEngine.class.getClassLoader().getResource(filePath+childFileName).getPath();
+                    if (new File(fileOrDir).isFile()) {
+                        xmlFileNames.append(filePath + childFileName).append(",");
+                    } else {
+                        filePathList.add(filePath + childFileName + "/");
+                    }
+                }
+                size--;
+            }
+        }
+
+        return xmlFileNames.deleteCharAt(xmlFileNames.length()-1).toString();
+    }
 }
