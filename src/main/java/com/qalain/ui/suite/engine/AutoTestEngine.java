@@ -1,6 +1,7 @@
 package com.qalain.ui.suite.engine;
 
 import com.qalain.ui.config.EngineConfig;
+import com.qalain.ui.util.GFG;
 import com.qalain.ui.constant.SuiteConstant;
 import com.qalain.ui.core.AutoTestProcessor;
 import com.qalain.ui.core.engine.EngineDriver;
@@ -19,6 +20,7 @@ import com.qalain.ui.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -40,6 +42,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -87,8 +90,11 @@ public class AutoTestEngine implements ITest {
                 String[] filePaths = testSuitePath.split(",");
                 StringBuffer allXMLFilePath = new StringBuffer();
                 for (String filePath : filePaths) {
-                    String suiteFilePath = AutoTestEngine.class.getClassLoader().getResource(filePath).getPath();
-                    allXMLFilePath.append(getAllFileNameByBFS(filePath + "/")).append(",");
+                    String allFileNameByBFS = getAllFileNameByBFS(filePath);
+                    if (StringUtils.isBlank(allFileNameByBFS)) {
+                        continue;
+                    }
+                    allXMLFilePath.append(allFileNameByBFS).append("/").append(",");
                 }
                 autoTestDataList = autoTestSuiteParser.initWithPart(allXMLFilePath.deleteCharAt(allXMLFilePath.length()-1).toString());
             } else {
@@ -161,7 +167,7 @@ public class AutoTestEngine implements ITest {
     private void doFlowStep(FlowStep flowStep, Map<String, SuiteElement> elementMap) {
         WebElement webElement = null;
         WebDriver webDriver = engine.getThreadLocalDriver();
-        WebDriverWait webDriverWait = new WebDriverWait(webDriver, flowStep.getWaitTime());
+        WebDriverWait webDriverWait = new WebDriverWait(webDriver, Duration.ofSeconds(flowStep.getWaitTime()));
         switch (flowStep.getAction()) {
             case SuiteConstant.Action.OPEN_PAGE:
                 engine.open(flowStep.getUrl());
@@ -217,13 +223,16 @@ public class AutoTestEngine implements ITest {
                 ThreadUtil.sleep(flowStep.getWaitTime());
                 break;
             case SuiteConstant.Action.CUSTOM:
+                if (StringUtils.isNotBlank(flowStep.getRefId())) {
+                    webElement = elementFindStrategy.find(ElementAdapter.getBaseElement(elementMap.get(flowStep.getRefId())));
+                }
                 Map<String, ICustomAction> customActionMap = autoTestSuiteParser.getApplicationContext().getBeansOfType(ICustomAction.class);
                 ICustomAction customAction = customActionMap.get(flowStep.getCustomFunction());
                 if (customAction == null) {
                     log.warn("未发现名为【{}】的 customFunction", flowStep.getCustomFunction());
                     break;
                 }
-                customAction.execute(engine);
+                customAction.execute(engine, flowStep, webElement);
                 ThreadUtil.sleep(flowStep.getWaitTime());
                 break;
             case SuiteConstant.Action.SWITCH_IFRAME:
@@ -232,6 +241,19 @@ public class AutoTestEngine implements ITest {
                 break;
             case SuiteConstant.Action.REFRESH:
                 webDriver.navigate().refresh();
+                break;
+            case  SuiteConstant.Action.COMPARE_IMG:
+                String imgPath = this.getClass().getResource("/").getPath() + EngineProperties.get(EngineConfig.SCREENSHOT_PATH);
+                String nowImgName = System.currentTimeMillis() + ".jpg";
+                String nowImgPath = imgPath + nowImgName;
+                SeleniumUtil.screenshot(webDriver, nowImgPath);
+                String res = GFG.compareImgAndGetPercentage(EngineProperties.get(EngineConfig.SCREENSHOT_PATH) + flowStep.getValue() + ".jpg", EngineProperties.get(EngineConfig.SCREENSHOT_PATH) + nowImgName);
+                log.info(res);
+                break;
+            case  SuiteConstant.Action.SCREEN:
+                String screenPath =this.getClass().getResource("/").getPath() + EngineProperties.get(EngineConfig.SCREENSHOT_PATH);
+                String destPath = screenPath + flowStep.getValue() + ".jpg";
+                SeleniumUtil.screenshot(webDriver, destPath);
                 break;
             default:
                 break;

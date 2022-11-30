@@ -10,7 +10,7 @@
             <xs:documentation><![CDATA[页面元素]]></xs:documentation>
         </xs:annotation>
     </xs:element>
-    <xs:complexType name="autoTestElement">
+    <xs:complexType name="autoTestElement" >
         <xs:sequence>
             <xs:element name="uiElements" type="tns:uiElementsType" minOccurs="0">
                 <xs:annotation>

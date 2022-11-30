@@ -4,9 +4,6 @@ import com.qalain.ui.config.EngineConfig;
 import com.qalain.ui.constant.BrowserConstant;
 import com.qalain.ui.core.entity.DriverInfo;
 import com.qalain.ui.exceptions.AutoUiTestException;
-import com.qalain.ui.suite.engine.AutoTestEngine;
-import com.qalain.ui.suite.entity.SuiteTestFlowData;
-import com.qalain.ui.util.ReadPropertiesUtil;
 import com.qalain.ui.util.SeleniumUtil;
 import com.qalain.ui.util.SystemUtil;
 import lombok.Getter;
@@ -23,22 +20,13 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.ie.InternetExplorerOptions;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.remote.SessionId;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.safari.SafariOptions;
 import org.springframework.stereotype.Component;
-import org.testng.ITestContext;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -198,7 +186,7 @@ public class EngineDriver {
      */
     public String screenshot() {
         String reportPath = EngineProperties.get(EngineConfig.REPORT_PATH, "test-output/");
-        String screenPath = (reportPath.endsWith("/") ? reportPath : reportPath + "/") + EngineProperties.get(EngineConfig.SCREENSHOT_PATH, "screenshot/");
+        String screenPath = (reportPath.endsWith("/") ? reportPath : reportPath + "/") + EngineProperties.get(EngineConfig.SCREENSHOT_PATH, "screen/");
         String destPath = screenPath + DateFormatUtils.format(new Date(), "yyyyMMdd_HHmmss") + ".jpg";
         SeleniumUtil.screenshot(driver.get(), destPath);
         return destPath;

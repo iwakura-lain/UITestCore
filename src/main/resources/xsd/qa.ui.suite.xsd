@@ -77,7 +77,35 @@
                     <xs:documentation><![CDATA[流程步骤具体信息]]></xs:documentation>
                 </xs:annotation>
             </xs:element>
+            <xs:element name="customFunction" type="tns:customFunctionType" maxOccurs="0" >
+                <xs:annotation>
+                    <xs:documentation><![CDATA[自定义函数]]></xs:documentation>
+                </xs:annotation>
+            </xs:element>
         </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="customFunctionType">
+        <xs:attribute name="refId" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[引用元素]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="compareElement" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[被引用来用于比较的元素]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="funcName" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[被执行的函数名]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="customParams" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[自定义参数列表,格式: type paramName,type paramName,...]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
 
     <xs:complexType name="uiStepType">
@@ -118,6 +146,11 @@
         </xs:attribute>
         <xs:attribute name="waitTime" type="xs:integer">
             <xs:annotation>
+                <xs:documentation><![CDATA[等待时间(毫秒)]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="imilarity" type="xs:string">
+            <xs:annotation>
                 <xs:documentation><![CDATA[等待时间]]></xs:documentation>
             </xs:annotation>
         </xs:attribute>
@@ -138,6 +171,8 @@
             <xs:enumeration value="custom"/>
             <xs:enumeration value="switchIframe"/>
             <xs:enumeration value="refresh"/>
+            <xs:enumeration value="compareImg"/>
+            <xs:enumeration value="screen"/>
         </xs:restriction>
     </xs:simpleType>
 

@@ -33,5 +33,9 @@ public class SuiteConstant {
         public static final String SWITCH_IFRAME = "switchIframe";
 
         public static final String REFRESH = "refresh";
+
+        public static final String COMPARE_IMG = "compareImg";
+
+        public static final String SCREEN = "screen";
     }
 }

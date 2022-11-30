@@ -1,0 +1,9 @@
+<autoTestElement xmlns="http://www.lain.cn/element">
+    <uiElements>
+        <uiElement id="hoyolab_close_log_pop" type="button" comment="关闭登录弹窗" byXpath="//img[@class='close-icon']"/>
+        <uiElement id="skip_like_select" type="button" comment="兴趣选择弹框skip" byXpath="//button[text()='跳过']"/>
+        <uiElement id="search_input" type="text" comment="搜索输入" byXpath="//input[@class='mhy-autocomplete__input']" />
+        <uiElement id="search_click" type="button" comment="搜索点击" byXpath="//i[@class='mhy-icon iconfont icon-search']" />
+        <uiElement id="first_search_result_title" type="text" comment="第一个搜索结果标题" byXpath="(//div[@class='title'])[1]" />
+    </uiElements>
+</autoTestElement>
