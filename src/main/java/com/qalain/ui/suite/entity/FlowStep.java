@@ -24,4 +24,8 @@ public class FlowStep {
     private String invokerContent;
 
     private Integer waitTime;
+
+    private String tagFiled;
+
+    private String variableName;
 }
