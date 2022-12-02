@@ -152,19 +152,20 @@ public class AutoTestEngine implements ITest {
             engine.setDriverInfo(suiteTestFlowData.getSuiteDriver());
             engine.init();
         }
-
         //设置作者到 context 中
         context.setAttribute("author", authorName.get());
 
         List<FlowStep> flowStepList = suiteTestFlowData.getSuiteFlow().getFlowStepList();
+        log.info(flowStepList.size()+"");
+        Map<String, String> extractMap = new HashMap<>();
         for (FlowStep flowStep : flowStepList) {
             ThreadUtil.sleep(suiteTestFlowData.getSuiteDriver().getActionBeforeWaitTime());
-            doFlowStep(flowStep, suiteTestFlowData.getSuiteElementMap());
+            doFlowStep(flowStep, suiteTestFlowData.getSuiteElementMap(), extractMap);
             ThreadUtil.sleep(suiteTestFlowData.getSuiteDriver().getActionAfterWaitTime());
         }
     }
 
-    private void doFlowStep(FlowStep flowStep, Map<String, SuiteElement> elementMap) {
+    private void doFlowStep(FlowStep flowStep, Map<String, SuiteElement> elementMap, Map<String, String> extractMap) {
         WebElement webElement = null;
         WebDriver webDriver = engine.getThreadLocalDriver();
         WebDriverWait webDriverWait = new WebDriverWait(webDriver, Duration.ofSeconds(flowStep.getWaitTime()));
@@ -180,6 +181,11 @@ public class AutoTestEngine implements ITest {
                 clickAction.click(webElement).build().perform();
                 //webDriverWait.until(ExpectedConditions.elementToBeClickable(webElement)).click();
                 ThreadUtil.sleep(flowStep.getWaitTime());
+                break;
+            case  SuiteConstant.Action.EXTRACT:
+                webElement = elementFindStrategy.find(ElementAdapter.getBaseElement(elementMap.get(flowStep.getRefId())));
+                extractMap.put(flowStep.getVariableName(), webElement.getAttribute(flowStep.getTagFiled()));
+                log.info(extractMap.toString());
                 break;
             case SuiteConstant.Action.HOVER:
                 webElement = elementFindStrategy.find(ElementAdapter.getBaseElement(elementMap.get(flowStep.getRefId())));

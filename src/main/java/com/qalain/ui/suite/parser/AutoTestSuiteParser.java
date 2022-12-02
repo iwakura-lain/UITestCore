@@ -5,6 +5,8 @@ import com.qalain.ui.constant.AutoTestConstant;
 import com.qalain.ui.core.engine.EngineDriver;
 import com.qalain.ui.core.engine.EngineProperties;
 import com.qalain.ui.core.hook.ShutdownHook;
+import com.qalain.ui.core.strategy.ElementFindStrategy;
+import com.qalain.ui.suite.adapter.ElementAdapter;
 import com.qalain.ui.suite.engine.AutoTestEngine;
 import com.qalain.ui.suite.entity.*;
 import com.qalain.ui.util.ReadPropertiesUtil;
@@ -15,6 +17,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.openqa.selenium.WebElement;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -44,6 +47,8 @@ public class AutoTestSuiteParser {
 
 
     private static final String ELEMENT_FILE_PATH = "element/";
+
+    private ElementFindStrategy<WebElement> elementFindStrategy;
 
     private AutoTestSuiteParser() {
         String customScanPackage = EngineProperties.get(EngineConfig.COMPONENT_SCAN_PACKAGE);
@@ -151,6 +156,8 @@ public class AutoTestSuiteParser {
                 flowStep.setCustomFunction(uiStepElement.attributeValue("customFunction"));
                 flowStep.setWaitTime(uiStepElement.attributeValue("waitTime") == null ? 0 : Integer.parseInt(uiStepElement.attributeValue("waitTime")));
                 flowStep.setInvokerContent(StringUtils.defaultIfBlank(uiStepElement.attributeValue("jsCode"), uiStepElement.getText()));
+                flowStep.setTagFiled(uiStepElement.attributeValue("tagFiled"));
+                flowStep.setVariableName(uiStepElement.attributeValue("variableName"));
                 suiteFlow.addFlowStep(flowStep);
             }
             suiteFlowList.add(suiteFlow);
