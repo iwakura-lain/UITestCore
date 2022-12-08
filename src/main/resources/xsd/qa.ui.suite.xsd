@@ -17,12 +17,12 @@
                     <xs:documentation><![CDATA[Ui自动化配置信息]]></xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="uiElements" type="tns:uiElementsType" minOccurs="0">
+            <xs:element name="uiElements" type="tns:uiElementsType" minOccurs="1">
                 <xs:annotation>
                     <xs:documentation><![CDATA[Ui元素定义]]></xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="uiFlows" type="tns:uiFlowsType" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="uiFlows" type="tns:uiFlowsType" minOccurs="1" maxOccurs="unbounded">
                 <xs:annotation>
                     <xs:documentation><![CDATA[Ui自动化流程信息]]></xs:documentation>
                 </xs:annotation>
@@ -199,7 +199,7 @@
 
     <xs:complexType name="uiElementsType">
         <xs:sequence>
-            <xs:element name="uiElement" type="tns:uiElementType" maxOccurs="unbounded">
+            <xs:element name="uiElement" type="tns:uiElementType" maxOccurs="unbounded" minOccurs="0">
                 <xs:annotation>
                     <xs:documentation><![CDATA[Ui元素定义信息]]></xs:documentation>
                 </xs:annotation>

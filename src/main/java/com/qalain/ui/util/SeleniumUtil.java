@@ -29,6 +29,7 @@ public class SeleniumUtil {
         if (driver == null) {
             return;
         }
+        new File(destPath).deleteOnExit();
         TakesScreenshot takesScreenshot = (TakesScreenshot) driver;
         File srcFile = takesScreenshot.getScreenshotAs(OutputType.FILE);
         try {

@@ -156,7 +156,6 @@ public class AutoTestEngine implements ITest {
         context.setAttribute("author", authorName.get());
 
         List<FlowStep> flowStepList = suiteTestFlowData.getSuiteFlow().getFlowStepList();
-        log.info(flowStepList.size()+"");
         Map<String, String> extractMap = new HashMap<>();
         for (FlowStep flowStep : flowStepList) {
             ThreadUtil.sleep(suiteTestFlowData.getSuiteDriver().getActionBeforeWaitTime());
@@ -202,10 +201,20 @@ public class AutoTestEngine implements ITest {
                 ThreadUtil.sleep(flowStep.getWaitTime());
                 break;
             case SuiteConstant.Action.COMPARE_VALUE:
-                webElement = elementFindStrategy.find(ElementAdapter.getBaseElement(elementMap.get(flowStep.getRefId())));
-                String value = webElement.getAttribute("value");
-                log.info("元素定位：{}，元素内容：{}", elementMap.get(flowStep.getRefId()), value);
-                Assert.assertEquals(value, flowStep.getExpectValue());
+                if (StringUtils.isNotBlank(flowStep.getVariableName()) && flowStep.getVariableName().charAt(0)=='$') {
+                    int index = flowStep.getVariableName().indexOf("$");
+                    log.info(extractMap.toString());
+                    log.info(flowStep.getVariableName().substring(index));
+                    String value = extractMap.get(flowStep.getVariableName().substring(index+1));
+                    log.info("指定值：{}，期望值：{}", value, flowStep.getExpectValue());
+                    Assert.assertEquals(value, flowStep.getExpectValue());
+                } else {
+                    webElement = elementFindStrategy.find(ElementAdapter.getBaseElement(elementMap.get(flowStep.getRefId())));
+                    String value = webElement.getAttribute("value");
+                    log.info("元素定位：{}，元素内容：{}", elementMap.get(flowStep.getRefId()), value);
+                    Assert.assertEquals(value, flowStep.getExpectValue());
+                }
+
                 ThreadUtil.sleep(flowStep.getWaitTime());
                 break;
             case SuiteConstant.Action.KEY_BOARD_ENTER:
@@ -253,12 +262,12 @@ public class AutoTestEngine implements ITest {
                 String nowImgName = System.currentTimeMillis() + ".jpg";
                 String nowImgPath = imgPath + nowImgName;
                 SeleniumUtil.screenshot(webDriver, nowImgPath);
-                String res = GFG.compareImgAndGetPercentage(EngineProperties.get(EngineConfig.SCREENSHOT_PATH) + flowStep.getValue() + ".jpg", EngineProperties.get(EngineConfig.SCREENSHOT_PATH) + nowImgName);
+                String res = GFG.compareImgAndGetPercentage(EngineProperties.get(EngineConfig.SCREENSHOT_PATH) + flowStep.getVariableName() + ".jpg", EngineProperties.get(EngineConfig.SCREENSHOT_PATH) + nowImgName);
                 log.info(res);
                 break;
             case  SuiteConstant.Action.SCREEN:
                 String screenPath =this.getClass().getResource("/").getPath() + EngineProperties.get(EngineConfig.SCREENSHOT_PATH);
-                String destPath = screenPath + flowStep.getValue() + ".jpg";
+                String destPath = screenPath + flowStep.getVariableName() + ".jpg";
                 SeleniumUtil.screenshot(webDriver, destPath);
                 break;
             default:
