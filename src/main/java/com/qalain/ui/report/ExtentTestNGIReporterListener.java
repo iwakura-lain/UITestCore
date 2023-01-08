@@ -49,15 +49,18 @@ public class ExtentTestNGIReporterListener implements ITestListener, IReporter {
      */
     private static final String REPORT_SUFFIX_NAME = ".html";
 
-    private ExtentReports extent = ExtentManager.getInstance("target/test-output/report.html");;
+    private ExtentReports extent = ExtentManager.getInstance("test-output/report.html");;
 
     private static ThreadLocal test = new ThreadLocal();
 
     @Override
     public void generateReport(List<XmlSuite> xmlSuites, List<ISuite> suites, String outputDirectory) {
-        extent = ReporterUtil.init(extent, OUTPUT_FOLDER, REPORT_PREFIX_NAME + DateFormatUtils.format(new Date(), "yyyy-MM-dd_HH-mm-ss") + REPORT_SUFFIX_NAME);
-        ReporterUtil.generateReport(xmlSuites, suites, outputDirectory, extent, OUTPUT_FOLDER, REPORT_PREFIX_NAME + DateFormatUtils.format(new Date(), "yyyy-MM-dd_HH-mm-ss") + REPORT_SUFFIX_NAME);
-        extent = ExtentManager.getInstance("test-output/report.html");
+        String fileName = REPORT_PREFIX_NAME + DateFormatUtils.format(new Date(), "yyyy-MM-dd_HH-mm-ss") + REPORT_SUFFIX_NAME;
+        extent = ReporterUtil.init(extent, OUTPUT_FOLDER, fileName);
+        ReporterUtil.generateReport(xmlSuites, suites, outputDirectory, extent, OUTPUT_FOLDER, fileName);
+        ReporterUtil.generateReport(xmlSuites, suites, outputDirectory, extent, OUTPUT_FOLDER, "report.html");
+
+        extent = ExtentManager.getInstance("test-output/" + fileName);
     }
 
     @Override
@@ -66,7 +69,7 @@ public class ExtentTestNGIReporterListener implements ITestListener, IReporter {
 
     @Override
     public synchronized void onFinish(ITestContext context) {
-        extent.flush();
+       extent.flush();
     }
 
     @Override
