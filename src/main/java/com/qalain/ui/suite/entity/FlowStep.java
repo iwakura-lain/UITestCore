@@ -28,4 +28,8 @@ public class FlowStep {
     private String tagFiled;
 
     private String variableName;
+
+    private String srcImgName;
+
+    private String templateImgName;
 }

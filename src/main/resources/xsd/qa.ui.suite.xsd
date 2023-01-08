@@ -159,6 +159,16 @@
                 <xs:documentation><![CDATA[等待时间]]></xs:documentation>
             </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="srcImgName" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[源文件名]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="templateImgName" type="xs:string">
+            <xs:annotation>
+                <xs:documentation><![CDATA[模板图片名]]></xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
         <xs:attribute name="tagFiled" type="tns:tagFiledEnum">
             <xs:annotation>
                 <xs:documentation><![CDATA[html标签属性等]]></xs:documentation>
@@ -194,6 +204,7 @@
             <xs:enumeration value="compareImg"/>
             <xs:enumeration value="screen"/>
             <xs:enumeration value="extract"/>
+            <xs:enumeration value="matchAndClick"/>
         </xs:restriction>
     </xs:simpleType>
 

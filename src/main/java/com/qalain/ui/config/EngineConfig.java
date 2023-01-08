@@ -70,4 +70,9 @@ public class EngineConfig {
      * 远程服务模式
      */
     public static final String REMOTE_ADDRESS = "driver.remote.address";
+
+    public static final String SRC_IMG_PATH = "src.img.path";
+
+    public static final String TEMPLATE_IMG_PATH = "template.img.path";
+
 }

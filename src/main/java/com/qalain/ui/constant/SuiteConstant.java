@@ -39,5 +39,7 @@ public class SuiteConstant {
         public static final String SCREEN = "screen";
 
         public static final String EXTRACT = "extract";
+
+        public static final String MATCH_AND_CLICK = "matchAndClick";
     }
 }

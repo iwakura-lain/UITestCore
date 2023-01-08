@@ -17,15 +17,15 @@ import com.qalain.ui.suite.entity.*;
 import com.qalain.ui.suite.invoker.JsInvoker;
 import com.qalain.ui.suite.parser.AutoTestSuiteParser;
 import com.qalain.ui.util.*;
+import com.qalain.ui.util.opencv.TemplateMatchUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.opencv.core.Point;
+import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
@@ -270,6 +270,27 @@ public class AutoTestEngine implements ITest {
                 String destPath = screenPath + flowStep.getVariableName() + ".jpg";
                 SeleniumUtil.screenshot(webDriver, destPath);
                 break;
+            case  SuiteConstant.Action.MATCH_AND_CLICK:
+                // 截图
+                String srcImgPath = this.getClass().getResource("/").getPath() + EngineProperties.get(EngineConfig.SRC_IMG_PATH);
+                String srcImgName = System.currentTimeMillis() + ".jpg";
+                String contentRootPath = srcImgPath + srcImgName;
+                SeleniumUtil.screenshot(webDriver, contentRootPath);
+
+                // 获取模板图片在截图上的坐标
+                Point templateCoordinate = TemplateMatchUtil.templateMatchWithCCORRNORMED(
+                        contentRootPath,
+                        this.getClass().getResource("/").getPath() + EngineProperties.get(EngineConfig.TEMPLATE_IMG_PATH) + flowStep.getTemplateImgName()
+                );
+
+                System.out.println(templateCoordinate.toString());
+                System.out.println(webDriver.manage().window().getSize());
+                Actions action = new Actions(webDriver);
+//                action.getActivePointer().createPointerMove(Duration.ofSeconds(2), PointerInput.Origin.pointer(), (int)templateCoordinate.x, (int)templateCoordinate.y);
+//                action.moveByOffset((int)templateCoordinate.x, (int)templateCoordinate.y).click().build().perform();
+                //webDriver.manage().window().setSize(new Dimension(2070, 3456));
+                action.moveByOffset(0, 0).build().perform();
+                action.moveByOffset((int)templateCoordinate.x, (int)templateCoordinate.y).click().build().perform();
             default:
                 break;
         }
