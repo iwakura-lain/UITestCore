@@ -49,18 +49,23 @@ public class ExtentTestNGIReporterListener implements ITestListener, IReporter {
      */
     private static final String REPORT_SUFFIX_NAME = ".html";
 
-    private ExtentReports extent = ExtentManager.getInstance("test-output/report.html");;
+    private ExtentReports extentReport = ExtentManager.getInstance("test-output/report.html");
+    //private ExtentReports extentReportWithDate = ExtentManager.getInstance("test-output/report.html");
 
     private static ThreadLocal test = new ThreadLocal();
 
     @Override
     public void generateReport(List<XmlSuite> xmlSuites, List<ISuite> suites, String outputDirectory) {
         String fileName = REPORT_PREFIX_NAME + DateFormatUtils.format(new Date(), "yyyy-MM-dd_HH-mm-ss") + REPORT_SUFFIX_NAME;
-        extent = ReporterUtil.init(extent, OUTPUT_FOLDER, fileName);
-        ReporterUtil.generateReport(xmlSuites, suites, outputDirectory, extent, OUTPUT_FOLDER, fileName);
-        ReporterUtil.generateReport(xmlSuites, suites, outputDirectory, extent, OUTPUT_FOLDER, "report.html");
 
-        extent = ExtentManager.getInstance("test-output/" + fileName);
+        extentReport = ReporterUtil.init(extentReport, OUTPUT_FOLDER, "report.html");
+        //extentReportWithDate = ReporterUtil.init(extentReport, OUTPUT_FOLDER, fileName);
+
+        ReporterUtil.generateReport(xmlSuites, suites, outputDirectory, extentReport, OUTPUT_FOLDER, "report.html");
+        ReporterUtil.generateReport(xmlSuites, suites, outputDirectory, extentReport, OUTPUT_FOLDER, fileName);
+
+        extentReport = ExtentManager.getInstance("test-output/report.html");
+        //extentReportWithDate = ExtentManager.getInstance("test-output/" + fileName);
     }
 
     @Override
@@ -69,12 +74,12 @@ public class ExtentTestNGIReporterListener implements ITestListener, IReporter {
 
     @Override
     public synchronized void onFinish(ITestContext context) {
-       extent.flush();
+        extentReport.flush();
     }
 
     @Override
     public synchronized void onTestStart(ITestResult result) {
-        test.set(extent.createTest(result.getTestName().split("_")[1]));
+        test.set(extentReport.createTest(result.getTestName().split("_")[1]));
     }
 
     @Override
