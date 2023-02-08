@@ -1,27 +1,25 @@
 <autoTestUiSuite xmlns="http://www.lain.cn/suite/config">
     <uiConfig>
         <engine browser="chrome" maximize="true" remoteAddress="http://127.0.0.1:4444/wd/hub/"/>
-        <actionAfterWaitTime time="1000" />
     </uiConfig>
-    <!-- 要用到的页面元素, type 并不是和 html 里的标签对应的，只不过代表类型，只要你能对应上就行-->
-    <uiElements>
-        <uiElement id="phone" type="text" comment="输入手机号/邮箱" byXpath="//*[@id='root']/div/div[1]/div/form/div[1]/div/input"/>
-        <uiElement id="password" type="text" comment="输入密码" byXpath="//*[@id='root']/div/div[1]/div/form/div[2]/div/input"/>
-        <uiElement id="link_start" type="button" comment="登陆按钮"  byXpath="//*[@id='root']/div/div[1]/div/form/div[4]/button" />
-        <uiElement id="hover_start" type="text" comment="登陆按钮"  byXpath="//*[@id='root']/div/div[1]/div/form/div[4]/button" />
-    </uiElements>
+    <uiElements ref="home/test.xml" />
     <uiFlows>
         <uiFlow>
             <author>lain</author>
-            <name>测试流程3</name>
-            <desc>测试通行证登陆</desc>
+            <name>搜索4</name>
+            <desc>测试HYL搜索4</desc>
             <uiSteps>
-                <uiStep action="openPage" url="https://www.baidu.com/"/>
-                <uiStep action="fillValue" refId="phone" value="15985112705" />
-                <uiStep action="fillValue" refId="password" value="12345678"/>
-<!--                <uiStep action="click" refId="link_start"/>-->
-                <uiStep action="hover" refId="hover_start"/>
-                <uiStep action="custom" customFunction="baiduSearch"/>
+                <uiStep action="openPage" url="https://www.hoyolab.com" waitTime="20000"/>
+                <uiStep action="click" refId="hoyolab_close_log_pop" waitTime="1000"/>
+                <uiStep action="click" refId="hoyolab_close_log_pop"/>
+                <uiStep action="click" refId="hoyolab_close_log_pop"/>
+                <uiStep action="click" refId="skip_like_select" />
+                <uiStep action="screen" variableName="主页截图"/>
+                <uiStep action="fillValue" refId="search_input" value="qiqi"/>
+                <uiStep action="click" refId="search_click" waitTime="10000"/>
+                <uiStep action="compareImg" variableName="主页截图"/>
+                <uiStep action="extract" refId="search_input" variableName="search_text4" tagFiled="value"/>
+                <uiStep action="compareValue" variableName="$search_text4" expectValue="qiqi"/>
             </uiSteps>
         </uiFlow>
     </uiFlows>
