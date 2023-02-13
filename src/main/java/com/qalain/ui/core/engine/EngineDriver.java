@@ -6,6 +6,7 @@ import com.qalain.ui.core.entity.DriverInfo;
 import com.qalain.ui.exceptions.AutoUiTestException;
 import com.qalain.ui.util.SeleniumUtil;
 import com.qalain.ui.util.SystemUtil;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +60,8 @@ public class EngineDriver {
 
     private ThreadLocal<WebDriver> driver = new ThreadLocal<>();
 
+    private Map<String, String> downloadPathMap = new HashMap<>();
+
     public WebDriver getThreadLocalDriver() {
         return driver.get();
     }
@@ -80,6 +83,7 @@ public class EngineDriver {
      * @return
      */
     public void createWebDriver() {
+        downloadOrUpdateDriver();
         initBrowserEngine();
         initBrowserCapMap();
         //获取当前浏览器配置信息
@@ -89,8 +93,8 @@ public class EngineDriver {
             throw new AutoUiTestException(String.format("未知类型的浏览器引擎名称，%s", driverInfo.getBrowser()));
         }
         //是否录制vnc
-        browserOptions.setCapability("se:recordVideo", true);
-        browserOptions.setCapability("se:screenResolution", "1920x1080");
+        //browserOptions.setCapability("se:recordVideo", true);
+        //browserOptions.setCapability("se:screenResolution", "1920x1080");
         WebDriver webDriver = null;
         log.info("driver remote address:{}", driverInfo.getRemoteAddress());
 
@@ -142,22 +146,19 @@ public class EngineDriver {
     }
 
     private void initBrowserEngine() {
-        setBrowserEngine(EngineConfig.CHROME_DRIVER, "driver/chromedriver", "webdriver.chrome.driver");
-        setBrowserEngine(EngineConfig.FIREFOX_DRIVER, "driver/geckodriver", "webdriver.gecko.driver");
-        setBrowserEngine(EngineConfig.SAFARI_DRIVER, "driver/safari", "webdriver.safari.driver");
+        setBrowserEngine(downloadPathMap.get("webdriver.chrome.driver"), "webdriver.chrome.driver");
+        setBrowserEngine(downloadPathMap.get("webdriver.gecko.driver"), "webdriver.gecko.driver");
+        setBrowserEngine(downloadPathMap.get("webdriver.safari.driver"), "webdriver.safari.driver");
     }
 
-    private void setBrowserEngine(String driverName, String driverPath, String properties) {
-        String path = EngineProperties.get(driverName, driverPath);
-        URL url = this.getClass().getClassLoader().getResource(path);
-        log.info("driver path：{}", path);
-        if (StringUtils.isEmpty(path) || StringUtils.isEmpty(Objects.requireNonNull(url).toString())) {
+    private void setBrowserEngine( String driverPath, String properties) {
+        log.info("driver path：{}", driverPath);
+        if (StringUtils.isEmpty(driverPath)) {
             return;
         }
         try {
-            File driverFile = new File(URLDecoder.decode(url.getFile(), "utf-8"));
-            System.getProperties().put(properties, driverFile.getAbsolutePath());
-        } catch (UnsupportedEncodingException e) {
+            System.getProperties().put(properties, driverPath);
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
     }
@@ -239,6 +240,18 @@ public class EngineDriver {
 
         SafariOptions safari = new SafariOptions();
         browserOptionsMap.put(BrowserConstant.SAFARI, safari);
+    }
+
+    private String downloadOrUpdateDriver () {
+        WebDriverManager.chromedriver().setup();
+        WebDriverManager.firefoxdriver().setup();
+        WebDriverManager.edgedriver().setup();
+
+        downloadPathMap.put("webdriver.chrome.driver", WebDriverManager.chromedriver().getDownloadedDriverPath());
+        downloadPathMap.put("webdriver.gecko.driver", WebDriverManager.firefoxdriver().getDownloadedDriverPath());
+        downloadPathMap.put("webdriver.safari.driver", WebDriverManager.edgedriver().getDownloadedDriverPath());
+
+        return WebDriverManager.chromedriver().getDownloadedDriverPath();
     }
 }
 
