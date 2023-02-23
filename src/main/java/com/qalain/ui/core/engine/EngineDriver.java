@@ -152,7 +152,7 @@ public class EngineDriver {
     }
 
     private void setBrowserEngine( String driverPath, String properties) {
-        log.info("driver path：{}", driverPath);
+        //log.info("driver path：{}", driverPath);
         if (StringUtils.isEmpty(driverPath)) {
             return;
         }
@@ -209,6 +209,12 @@ public class EngineDriver {
      */
     private void initBrowserCapMap() {
         ChromeOptions chrome = new ChromeOptions();
+        // close autotest top toast in chrome
+        chrome.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
+
+        // your connection is not private
+        chrome.addArguments("--ignore-certificate-errors");
+
         if (SystemUtil.isMac() && driverInfo.isMaximize()) {
             chrome.addArguments("--kiosk");
         }
@@ -218,6 +224,7 @@ public class EngineDriver {
             chrome.addArguments("-headless");
             chrome.addArguments("window-size=1920,1080");
         }
+
         if (driverInfo.isMobile()) {
             log.info("设置开启为手机模式");
             chrome.addArguments("--user-agent=Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/%s Mobile Safari/537.36");
@@ -245,11 +252,12 @@ public class EngineDriver {
     private String downloadOrUpdateDriver () {
         WebDriverManager.chromedriver().setup();
         WebDriverManager.firefoxdriver().setup();
-        WebDriverManager.edgedriver().setup();
+        WebDriverManager.safaridriver().setup();
+        //WebDriverManager.edgedriver().setup();
 
         downloadPathMap.put("webdriver.chrome.driver", WebDriverManager.chromedriver().getDownloadedDriverPath());
         downloadPathMap.put("webdriver.gecko.driver", WebDriverManager.firefoxdriver().getDownloadedDriverPath());
-        downloadPathMap.put("webdriver.safari.driver", WebDriverManager.edgedriver().getDownloadedDriverPath());
+        downloadPathMap.put("webdriver.safari.driver",  WebDriverManager.safaridriver().getDownloadedDriverPath());
 
         return WebDriverManager.chromedriver().getDownloadedDriverPath();
     }

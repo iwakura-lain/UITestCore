@@ -1,6 +1,7 @@
 package com.qalain.ui.suite.engine;
 
 import com.qalain.ui.config.EngineConfig;
+import com.qalain.ui.core.entity.ui.BaseElement;
 import com.qalain.ui.util.GFG;
 import com.qalain.ui.constant.SuiteConstant;
 import com.qalain.ui.core.AutoTestProcessor;
@@ -17,6 +18,7 @@ import com.qalain.ui.suite.entity.*;
 import com.qalain.ui.suite.invoker.JsInvoker;
 import com.qalain.ui.suite.parser.AutoTestSuiteParser;
 import com.qalain.ui.util.*;
+import com.qalain.ui.util.opencv.OCRUtils;
 import com.qalain.ui.util.opencv.TemplateMatchUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
@@ -24,8 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.opencv.core.Point;
 import org.openqa.selenium.*;
-import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.interactions.PointerInput;
+import org.openqa.selenium.interactions.*;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
@@ -35,12 +36,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.testng.*;
 import org.testng.annotations.*;
 import org.testng.internal.TestResult;
+import org.testng.internal.collections.Pair;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.lang.reflect.Proxy;
 import java.time.Duration;
 import java.util.*;
@@ -164,7 +164,7 @@ public class AutoTestEngine implements ITest {
         }
     }
 
-    private void doFlowStep(FlowStep flowStep, Map<String, SuiteElement> elementMap, Map<String, String> extractMap) {
+    private void doFlowStep(FlowStep flowStep, Map<String, SuiteElement> elementMap, Map<String, String> extractMap) throws InterruptedException {
         WebElement webElement = null;
         WebDriver webDriver = engine.getThreadLocalDriver();
         WebDriverWait webDriverWait = new WebDriverWait(webDriver, Duration.ofSeconds(flowStep.getWaitTime()));
@@ -270,27 +270,56 @@ public class AutoTestEngine implements ITest {
                 String destPath = screenPath + flowStep.getVariableName() + ".jpg";
                 SeleniumUtil.screenshot(webDriver, destPath);
                 break;
-            case  SuiteConstant.Action.MATCH_AND_CLICK:
+            case  SuiteConstant.Action.IMG_MATCH_AND_CLICK:
                 // 截图
                 String srcImgPath = this.getClass().getResource("/").getPath() + EngineProperties.get(EngineConfig.SRC_IMG_PATH);
                 String srcImgName = System.currentTimeMillis() + ".jpg";
                 String contentRootPath = srcImgPath + srcImgName;
                 SeleniumUtil.screenshot(webDriver, contentRootPath);
 
-                // 获取模板图片在截图上的坐标
+                // 获取模板图片在截图上的中心坐标
                 Point templateCoordinate = TemplateMatchUtil.templateMatchWithCCORRNORMED(
                         contentRootPath,
                         this.getClass().getResource("/").getPath() + EngineProperties.get(EngineConfig.TEMPLATE_IMG_PATH) + flowStep.getTemplateImgName()
                 );
 
-                System.out.println(templateCoordinate.toString());
-                System.out.println(webDriver.manage().window().getSize());
-                Actions action = new Actions(webDriver);
-//                action.getActivePointer().createPointerMove(Duration.ofSeconds(2), PointerInput.Origin.pointer(), (int)templateCoordinate.x, (int)templateCoordinate.y);
-//                action.moveByOffset((int)templateCoordinate.x, (int)templateCoordinate.y).click().build().perform();
-                //webDriver.manage().window().setSize(new Dimension(2070, 3456));
-                action.moveByOffset(0, 0).build().perform();
-                action.moveByOffset((int)templateCoordinate.x, (int)templateCoordinate.y).click().build().perform();
+                try {
+                    Actions imgTemplateMatchAndClickAction = new Actions(webDriver);
+                    imgTemplateMatchAndClickAction
+                        .setActivePointer(PointerInput.Kind.MOUSE, "imgMatchAndClick-" + System.currentTimeMillis())
+                        .moveByOffset((int)templateCoordinate.x, (int)templateCoordinate.y).click().build().perform();
+
+                } catch (MoveTargetOutOfBoundsException e) {
+                    log.error(e.getMessage());
+                }
+                break;
+            case  SuiteConstant.Action.TEXT_MATCH_AND_CLICK:
+
+                // 截图
+                String textSrcImgPath = this.getClass().getResource("/").getPath() + EngineProperties.get(EngineConfig.SRC_IMG_PATH);
+                String textSrcImgName = System.currentTimeMillis() + ".jpg";
+                String textContentRootPath = textSrcImgPath + textSrcImgName;
+                SeleniumUtil.screenshot(webDriver, textContentRootPath);
+
+                Map<String, Point> targetTextCoordinate = OCRUtils.getTargetTextCoordinate(textContentRootPath, flowStep.getText());
+                try {
+                    Actions textMatchAndClickAction = new Actions(webDriver);
+
+                    int x = (int)targetTextCoordinate.get(flowStep.getText()).x;
+
+                    int y = (int)targetTextCoordinate.get(flowStep.getText()).y;
+
+
+                    textMatchAndClickAction
+                        .setActivePointer(PointerInput.Kind.MOUSE, "textMatchAndClick-" + System.currentTimeMillis())
+                        .moveByOffset(x, y).click().build().perform();
+
+                } catch (MoveTargetOutOfBoundsException e) {
+                    log.error(e.getMessage());
+                }
+
+                TimeUnit.SECONDS.sleep(10);
+                break;
             default:
                 break;
         }
