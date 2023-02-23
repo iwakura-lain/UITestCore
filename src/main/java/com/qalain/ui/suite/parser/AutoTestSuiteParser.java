@@ -160,6 +160,7 @@ public class AutoTestSuiteParser {
                 flowStep.setVariableName(uiStepElement.attributeValue("variableName"));
                 flowStep.setSrcImgName(uiStepElement.attributeValue("srcImgName"));
                 flowStep.setTemplateImgName(uiStepElement.attributeValue("templateImgName"));
+                flowStep.setText(uiStepElement.attributeValue("text"));
                 suiteFlow.addFlowStep(flowStep);
             }
             suiteFlowList.add(suiteFlow);

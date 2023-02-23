@@ -32,4 +32,6 @@ public class FlowStep {
     private String srcImgName;
 
     private String templateImgName;
+
+    private String text;
 }

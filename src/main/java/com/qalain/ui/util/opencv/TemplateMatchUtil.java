@@ -53,6 +53,11 @@ public class TemplateMatchUtil {
         Double y = matchLocation.y + (mTemplate.rows() / 2);
         int resX = (int)Math.floor(x);
         int resY = (int)Math.floor(y);
+
+        if (mInput.rows() < y || mInput.cols() < x) {
+            log.error("匹配定位超出图片范围，请检查是否存在匹配图片");
+        }
+
         return new Point(resX, resY);
     }
 }

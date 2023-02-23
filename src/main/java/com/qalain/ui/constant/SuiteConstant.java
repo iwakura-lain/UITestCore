@@ -40,6 +40,9 @@ public class SuiteConstant {
 
         public static final String EXTRACT = "extract";
 
-        public static final String MATCH_AND_CLICK = "matchAndClick";
+        public static final String IMG_MATCH_AND_CLICK = "imgMatchAndClick";
+
+        public static final String TEXT_MATCH_AND_CLICK = "textMatchAndClick";
+
     }
 }
